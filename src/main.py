@@ -72,6 +72,7 @@ def create_app() -> FastAPI:
     # Include routers
     from src.api.snapshots import router as snapshots_router, rollback_router
     from src.api.kill_switch import router as kill_switch_router, slack_router
+    from src.api.websocket import router as websocket_router
 
     app.include_router(health.router)
     app.include_router(actions.router)
@@ -79,6 +80,7 @@ def create_app() -> FastAPI:
     app.include_router(rollback_router)
     app.include_router(kill_switch_router)
     app.include_router(slack_router)
+    app.include_router(websocket_router)
 
     # Root endpoint
     @app.get("/")
