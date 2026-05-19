@@ -1,0 +1,54 @@
+version: '3.9'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: agentfuse-postgres
+    environment:
+      POSTGRES_USER: agentfuse
+      POSTGRES_PASSWORD: agentfuse
+      POSTGRES_DB: agentfuse
+    ports:
+      - "5432:5432"
+    volumes:
+      - agentfuse-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agentfuse"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # AgentFuse API Server
+  agentfuse:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agentfuse-api
+    environment:
+      DATABASE_URL: postgresql://agentfuse:agentfuse@postgres:5432/agentfuse
+      CLASSIFIER_DEVICE: cpu
+      HOST: 0.0.0.0
+      PORT: 8000
+      LOG_LEVEL: INFO
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./models:/app/models
+      - ./data:/app/data
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  agentfuse-postgres-data:
+
+networks:
+  default:
+    name: agentfuse-network

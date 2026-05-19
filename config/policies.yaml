@@ -1,0 +1,76 @@
+# AgentFuse Policy Configuration
+
+# Per-agent configuration
+agents:
+  # Default policy for all agents
+  default:
+    scope: staging
+    max_parallel_actions: 10
+    require_approval_on_yellow: false
+    require_approval_on_red: true
+    auto_rollback_on_error: true
+
+  # Claude development agent
+  claude-dev:
+    scope: staging
+    max_parallel_actions: 5
+    require_approval_on_yellow: false
+    require_approval_on_red: true
+    auto_rollback_on_error: true
+
+  # Automated task runner
+  automated-task:
+    scope: prod_analytics_replica
+    max_parallel_actions: 3
+    require_approval_on_yellow: true
+    require_approval_on_red: true
+    auto_rollback_on_error: true
+
+  # Cursor IDE agent
+  cursor-agent:
+    scope: staging
+    max_parallel_actions: 10
+    require_approval_on_yellow: false
+    require_approval_on_red: true
+
+# Classification rules
+rules:
+  # Production scope prefixes (matched against agent_scope)
+  prod_prefix:
+    - prod_
+    - production_
+    - prod-
+
+  # Config/sensitive files (matched against target_resource)
+  config_files:
+    - /etc/
+    - config.yaml
+    - settings.json
+    - .env
+    - docker-compose.yml
+    - secrets.json
+    - .aws/
+    - .ssh/
+
+  # Dangerous bash commands (matched in command string)
+  dangerous_commands:
+    - "rm -rf"
+    - "dd if="
+    - "mkfs"
+    - ":(){ :|:& };"  # fork bomb
+    - "curl | bash"
+    - "wget | bash"
+
+# Alert thresholds
+alerts:
+  red_action_severity: critical
+  yellow_in_prod_severity: high
+  credential_access_severity: critical
+  max_blocked_per_hour: 10  # Trigger alert if > this many blocks
+
+# Rollback configuration (for Day 4)
+rollback:
+  enabled: true
+  max_age_hours: 24
+  auto_rollback_on_red: false
+  require_approval_on_rollback: true
